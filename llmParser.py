@@ -65,7 +65,7 @@ class LLMParser:
         - **No incluyas comas sobrantes al final de listas o diccionarios**.
         - Al final valida que estén todos los campos requeridos según el esquema y que estén correctamente formateados.
 
-        Ahora extrae la información del siguiente currículum y devuelve el **JSON en formato válido**:
+        Ahora extrae la información del siguiente currículum y devuelve **SOLAMENTE** el **JSON en formato válido**:
         {self.cvText}
         """
         # Se llama al modelo de lenguaje para extraer la información:

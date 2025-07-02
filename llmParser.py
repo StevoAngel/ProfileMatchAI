@@ -7,9 +7,9 @@ from pydantic import BaseModel, Field
 try:
     ollama.pull('mistral')
     llm = ChatOllama(model="mistral")
-    print("Modelo de Ollama cargado correctamente.")
+    print("Olamma model loaded successfully.")
 except Exception as e:
-    print(f"Error al cargar el modelo de Ollama: {e}")
+    print(f"Error at loading the Ollama model: {e}")
     llm = None
 
 # Definir estructura de datos para la informacion extraida del CV:
@@ -77,8 +77,20 @@ class LLMParser:
             print(f"CV Information Response:\n{response.content}")
     
         # Se convierte la respuesta en un objeto JSON:
-        rawInfo = json.loads(response.content)
-        cvInfoJSON = CVInfo(**rawInfo)
+        maxAttempts = 3
+        attempts = 0
+
+        while attempts < maxAttempts:
+            try:
+                # Try to parse the response content as JSON
+                rawInfo = json.loads(response.content)
+                cvInfoJSON = CVInfo(**rawInfo)
+                break  # Exit loop if parsing is successful
+            except Exception as e:
+                lastError = e   
+                attempts += 1
+                if attempts == maxAttempts:
+                    raise Exception(f"Failed to parse CV information after {maxAttempts} attempts. Last error: {lastError}")
 
         return cvInfoJSON
     

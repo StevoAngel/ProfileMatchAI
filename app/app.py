@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 import utils.functions as functions
 
-from InstructorEmbedding import INSTRUCTOR
+#from InstructorEmbedding import INSTRUCTOR
 
 
 

@@ -64,6 +64,14 @@ def extractJobDescriptionInfo(jobDescriptionFile):
     return jobDescriptionInfo
 
 def df2Excel(df):
+    """
+    Converts a DataFrame to an Excel file in memory.
+    
+    Parameters:
+        - df (pd.DataFrame): DataFrame to convert.
+    Returns:
+        - io.BytesIO: Excel file in memory.
+    """
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         df.to_excel(writer, index=False, sheet_name='candidatos')

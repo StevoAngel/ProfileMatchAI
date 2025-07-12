@@ -5,8 +5,8 @@ The system identifies and returns candidates whose profiles best match the job r
 
 ## Features
 - Upload multiple CVs (PDF only)
-- Intelligent profile matching using NLP and LLMs
-- Export top matches
+- Intelligent profile matching using NLP and LLMs: (<ins>In progress...</ins>)
+- Export top matches (<ins>In progress...</ins>)
 
 ## Getting Started
 ### Option 1 Run locally:

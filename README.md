@@ -1,5 +1,9 @@
 # ProfileMatchAI
 
+**Important prerequisite:** 
+This project uses Ollama to run `mistral` LLM, then it is necessary to install Ollama in your ssystem before running the app:
+Download Link: https://ollama.com/
+
 Tool designed to upload a set of résumés and a job vacancy description.  
 The system identifies and returns candidates whose profiles best match the job requirements.
 

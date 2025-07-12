@@ -54,7 +54,7 @@ class LLMParser:
         }}
 
         Reglas:
-        - Las respuestas deben ser en inglés o español, según el idioma del texto de entrada.
+        - Las respuestas deben ser en **inglés** o **español** según el idioma del texto de entrada.
         - "profile" debe ser un extracto **representativo** en **150 palabras** del currículum enfocado especialmente en experiencia, habilidades y educación del candidato en str **texto plano** que será utilizada para crear una similitud vectorial con la descripción de la vacante.
         - Los campos de softSkills y hardSkills deben estar correctamente diferenciados, no debe haber una habilidad dura en el campo de habilidades blandas ni viceversa.
         - **Debes incluir única y exclusivamente los campos mencionados en el esquema y en ese formato.
@@ -63,32 +63,83 @@ class LLMParser:
         - Si un campo no está presente en el CV, déjalo vacío o usa una lista vacía (`[]`) según corresponda.
         - Sí encuentras más de un valor para un campo tipo string, debes incluir solo el primero.
         - **No incluyas comas sobrantes al final de listas o diccionarios**.
+        - **No inventes información ni incluyas información que no esté en el texto**
         - Al final valida que estén todos los campos requeridos según el esquema y que estén correctamente formateados.
 
-        Ahora extrae la información del siguiente currículum y devuelve **SOLAMENTE** el **JSON en formato válido**:
+        Ahora **ESTRICTAMENTE** extrae la información del siguiente currículum y devuelve **SOLAMENTE** el **JSON en formato válido** mencionado a continuación:
+
+        {{
+            "name": "string",
+            "email": "string",
+            "phone": "string",
+            "location": "string",
+            "profile": "string",
+            "experience": ["string", "string"],
+            "education": ["string", "string"],
+            "hardSkills": ["string", "string"],
+            "softSkills": ["string", "string"],
+        }}
+
+
         {self.cvText}
         """
-        # Se llama al modelo de lenguaje para extraer la información:
-        response = llm.invoke([
-            {"role": "user", "content": prompt}
-        ])
 
-        if verbose:
-            print(f"CV Information Response:\n{response.content}")
-    
+        recoveryPrompt = f"""
+        IMPORTANTE: RESPONDE ÚNICAMENTE EN FORMATO JSON VALIDO.
+        No incluyas explicaciones, ni texto adicional, ni etiquetas HTML, ni signos de puntuación extra, ni encabezados, ni saludos, ni despedidas, ni nada que no sea el JSON solicitado.
+
+        Ejemplo del formato esperado (SOLO JSON, sin explicaciones):
+
+        {{
+            "name": "string",
+            "email": "string",
+            "phone": "string",
+            "location": "string",
+            "profile": "string",
+            "experience": ["string", "string"],
+            "education": ["string", "string"],
+            "hardSkills": ["string", "string"],
+            "softSkills": ["string", "string"],
+        }}
+        """
+
         # Se convierte la respuesta en un objeto JSON:
-        maxAttempts = 5
+        maxAttempts = 10
         attempts = 0
+        lastError = ""
+        basePrompt = prompt  # Store the base prompt for retries
 
         while attempts < maxAttempts:
             try:
+                cPrompt = basePrompt # Reset the prompt to the base prompt for each attempt
+
+                if attempts > 2:
+                    print("Entering recovery mode due to previous errors.")
+                    # After 2 failed attempts, append the recovery prompt to help guide the model
+                    #cPrompt += f"\n\n Tu respuesta anterior tuvo este error al procesarse:\n {lastError}"
+                    cPrompt += recoveryPrompt
+
+                # Se llama al modelo de lenguaje para extraer la información:
+                response = llm.invoke([
+                    {"role": "user", "content": cPrompt}
+                ])
+
+                if verbose:
+                    print(f"Intento {attempts + 1}: CV Information Response:\n{response.content}")
+
                 # Try to parse the response content as JSON
-                rawInfo = json.loads(response.content)
-                cvInfoJSON = CVInfo(**rawInfo)
+                rawInfo = json.loads(response.content) # This will raise an error if the JSON is invalid
+                cvInfoJSON = CVInfo(**rawInfo) # Convert the raw info to CVInfo model
                 break  # Exit loop if parsing is successful
+
             except Exception as e:
-                lastError = e   
+                lastError = str(e)[:500]  # Store the last error message, truncated to 500 characters   
                 attempts += 1
+
+                if verbose:
+                    print(f"[Error en intento {attempts}]: {e}")
+                    print(f"Contenido recibido:\n{getattr(response, 'content', 'Sin respuesta')}")
+
                 if attempts == maxAttempts:
                     raise Exception(f"Failed to parse CV information after {maxAttempts} attempts. Last error: {lastError}")
 
@@ -119,11 +170,13 @@ class LLMParser:
         - Si un campo no está presente en el CV, déjalo vacío o usa una lista vacía (`[]`) según corresponda.
         - Sí encuentras más de un valor para un campo tipo string, debes incluir solo el primero.
         - **No incluyas comas sobrantes al final de listas o diccionarios**.
+        - **No inventes información ni incluyas información que no esté en el texto**
         - Al final valida que estén todos los campos requeridos según el esquema y que estén correctamente formateados.
 
         Ahora extrae la información del siguiente currículum y devuelve el JSON válido:
         {self.jobDescriptionText}
         """
+
         # Se llama al modelo de lenguaje para extraer la información:
         response = llm.invoke([
             {"role": "user", "content": prompt}

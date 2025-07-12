@@ -40,10 +40,11 @@ def extractCVsInfo(cvFiles):
 
     for i, file in enumerate(cvFiles):
         if file.name.endswith('.pdf'):
+            print(f"Processing: {file.name}")
             text = extractText(file)  # Procesar PDF desde objeto en memoria
             cvInfo = parser.extract_CVInfo(text, True)
             cvDict[i] = cvInfo
-            print(f"Processing: {file.name}")
+            print(f"Completed: {file.name}")
 
     return cvDict
 

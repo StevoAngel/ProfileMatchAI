@@ -5,8 +5,8 @@ from pydantic import BaseModel, Field
 
 #Cargar modelo de Ollama:
 try:
-    ollama.pull('mistral')
-    llm = ChatOllama(model="mistral")
+    ollama.pull('llama3:instruct')
+    llm = ChatOllama(model='llama3:instruct')
     print("Olamma model loaded successfully.")
 except Exception as e:
     print(f"Error at loading the Ollama model: {e}")
@@ -39,8 +39,10 @@ class LLMParser:
         self.cvText = cvText
 
         # Se define el prompt para extraer la informacion del CV:
-        prompt = f"""
-        Eres un experto en extracción de información de currículums en inglés y español. Tu tarea es generar **únicamente** un JSON **válido y correctamente formateado** siguiendo el esquema siguiente:
+        prompt = f""" Eres un experto en extracción de información de currículums en inglés y español.
+
+        Tu única tarea es generar un JSON **válido** y **estrictamente conforme** al siguiente esquema:
+
         {{
             "name": "string",
             "email": "string",
@@ -50,22 +52,26 @@ class LLMParser:
             "experience": ["string", "string"],
             "education": ["string", "string"],
             "hardSkills": ["string", "string"],
-            "softSkills": ["string", "string"],
+            "softSkills": ["string", "string"]
         }}
 
-        Reglas:
-        - Las respuestas deben ser en inglés o español, según el idioma del texto de entrada.
-        - "profile" debe ser un extracto **representativo** en **150 palabras** del currículum enfocado especialmente en experiencia, habilidades y educación del candidato en str **texto plano** que será utilizada para crear una similitud vectorial con la descripción de la vacante.
-        - Los campos de softSkills y hardSkills deben estar correctamente diferenciados, no debe haber una habilidad dura en el campo de habilidades blandas ni viceversa.
-        - **Debes incluir única y exclusivamente los campos mencionados en el esquema y en ese formato.
-        - El resultado debe ser solo un **JSON puro**, sin explicaciones, texto adicional, ni etiquetas HTML, ni signos de puntuación extra.
-        - **Todos los textos (strings) deben ir entre comillas dobles**.
-        - Si un campo no está presente en el CV, déjalo vacío o usa una lista vacía (`[]`) según corresponda.
-        - Sí encuentras más de un valor para un campo tipo string, debes incluir solo el primero.
-        - **No incluyas comas sobrantes al final de listas o diccionarios**.
-        - Al final valida que estén todos los campos requeridos según el esquema y que estén correctamente formateados.
+        Instrucciones obligatorias:
+        - El resultado debe ser un JSON **puro**, **sin ningún texto adicional ni explicaciones**.
+        - Usa el idioma del currículum: inglés o español.
+        - El campo "profile" debe ser un resumen de máximo **150 palabras**, en texto plano, basado en la experiencia, educación y habilidades.
+        - Usa siempre **comillas dobles** para todos los valores de texto.
+        - Si un campo no existe en el CV, déjalo vacío ("" o []) según corresponda.
+        - Si hay múltiples valores en campos tipo string (como "name"), elige solo el primero.
+        - Diferencia correctamente **hardSkills** de **softSkills**.
+        - No incluyas comas extra al final de listas o del objeto JSON.
+        - Asegúrate de que **TODOS** los campos estén presentes y correctamente formateados.
+        - El resultado debe ser un JSON **puro**, **sin ningún texto adicional ni explicaciones**.
 
-        Ahora extrae la información del siguiente currículum y devuelve **SOLAMENTE** el **JSON en formato válido**:
+        A continuación recibirás el texto de un CV. Tu única salida será el JSON como se indicó (**SIN TEXTO ADICIONAL, SOLO LA ESTRUCTURA DE DATOS JSON**).
+
+        **SIN TEXTO ADICIONAL, SOLO LA ESTRUCTURA DE DATOS JSON**
+
+        Texto del CV:
         {self.cvText}
         """
         # Se llama al modelo de lenguaje para extraer la información:
@@ -77,7 +83,7 @@ class LLMParser:
             print(f"CV Information Response:\n{response.content}")
     
         # Se convierte la respuesta en un objeto JSON:
-        maxAttempts = 3
+        maxAttempts = 10
         attempts = 0
 
         while attempts < maxAttempts:

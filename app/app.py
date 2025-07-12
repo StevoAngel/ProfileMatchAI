@@ -61,7 +61,7 @@ def main():
         cvData = {key: value.model_dump() for key, value in st.session_state["cvsInfo"].items()} # Convertir a diccionario
         dfCVs = pd.DataFrame(cvData).T # Convertir a DataFrame
         dfCVs.columns = ["Nombre", "Correo", "Teléfono", "Perfil", "Ubicación", "Experiencia", "Educación", "Habilidades Técnicas", "Habilidades Blandas"] # Renombrar columnas
-        dfCVs.set_index("Nombre", inplace=True) # Establecer la columna "name" como índice
+        #dfCVs.set_index("Nombre", inplace=True) # Establecer la columna "name" como índice
         dfCVs = dfCVs[~dfCVs.index.duplicated(keep='first')] # Eliminar duplicados
 
         st.subheader("📄 Información de los candidatos")

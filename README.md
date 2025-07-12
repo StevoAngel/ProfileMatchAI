@@ -1,7 +1,7 @@
 # ProfileMatchAI
 
 **Important prerequisite:** 
-This project uses Ollama to run `mistral` LLM, then it is necessary to install Ollama in your ssystem before running the app:
+This project uses Ollama to run a local _Large Language Model_ (`mistral`) , then it is necessary to install Ollama in your system before running the app.
 Download Link: https://ollama.com/
 
 Tool designed to upload a set of résumés and a job vacancy description.  
